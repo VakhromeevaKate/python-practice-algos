@@ -1,0 +1,108 @@
+import os
+import kagglehub
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sklearn.datasets as sklearn
+
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+import warnings
+warnings.filterwarnings('ignore')
+from sklearn.datasets import fetch_california_housing
+import pandas as pd
+
+california_data = fetch_california_housing(as_frame=True)
+df = california_data.frame
+df.describe()
+print('Shape:', df.shape)
+df.info()
+df.duplicated().sum()
+df.isnull().sum()
+plt.hist(df['MedHouseVal'], bins=50, color='#4c72b0')
+plt.title('Distribution of Median House Value')
+plt.xlabel('MedHouseVal ($100k)')
+plt.ylabel('Block')
+plt.show()
+plt.scatter(df['MedInc'], df['MedHouseVal'], s=1, alpha=0.3, color='#4c72b0')
+plt.title('MedHouseVal vs MedInc')
+plt.xlabel('MedInc $10k')
+plt.ylabel('MedHouseVal $100k')
+plt.show()
+plt.hist(df['HouseAge'], bins=52, color='#4c72b0')
+plt.title('House Age Distribution')
+plt.xlabel('HouseAge')
+plt.ylabel('Block')
+plt.show()
+plt.figure(figsize=(8, 6))
+plt.scatter(df['Longitude'], df['Latitude'], c=df['MedHouseVal'], cmap='viridis', s=2, alpha=0.6)
+plt.colorbar(label='MedHouseVal')
+plt.title('Geographic Distribution of House Values')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+plt.scatter(df['AveRooms'], df['AveBedrms'], s=1, alpha=0.3, color='#4c72b0')
+plt.title('AveRooms vs AveBedrms')
+plt.xlabel('AveRooms')
+plt.ylabel('AveBedrms')
+plt.xlim(0, 20)
+plt.ylim(0, 5)
+plt.show()
+plt.scatter(df['Population'], df['MedHouseVal'], s=1, alpha=0.3, color='#4c72b0')
+plt.title('MedHouseVal vs Population')
+plt.xlabel('Population')
+plt.ylabel('MedHouseVal')
+plt.xlim(0, 5000)
+plt.show()
+plt.figure(figsize=(10, 6))
+sns.heatmap(df.corr(numeric_only=True), annot=True)
+plt.title('Correlation Matrix')
+plt.show()
+cols = ['MedInc', 'HouseAge', 'AveRooms', 'AveBedrms',
+        'Population', 'AveOccup', 'MedHouseVal']
+
+for col in cols:
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    n = ((df[col] < Q1 - 1.5 * IQR) | (df[col] > Q3 + 1.5 * IQR)).sum()
+    print(col, '->', n, 'outliers')
+fig, axes = plt.subplots(1, 7, figsize=(16, 6))
+for ax, col in zip(axes, cols):
+    ax.boxplot(df[col])
+    ax.set_title(col)
+plt.tight_layout()
+plt.show()
+df['RoomsPerPerson'] = df['AveRooms'] / df['AveOccup']
+df['BedroomRatio'] = df['AveBedrms'] / df['AveRooms']
+df['PopPerHousehold'] = df['Population'] / df['AveOccup']
+for c in ['Population', 'AveOccup', 'AveRooms']:
+    df[f'log_{c}'] = np.log1p(df[c])
+target = 'MedHouseVal'
+num_cols = [c for c in df.columns if c != target]
+
+x = df[num_cols].copy()
+y = df[target].copy()
+
+print('Shape:', x.shape)
+x.head()
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+print(x_train.shape, x_test.shape)
+scaler = StandardScaler()
+x_train_scaled = scaler.fit_transform(x_train)
+x_test_scaled = scaler.transform(x_test)
+from sklearn.linear_model import LinearRegression
+
+models = {
+    'Linear Regression': LinearRegression(),
+}
+
+for name, m in models.items():
+    m.fit(x_train_scaled, y_train)
+    pred = m.predict(x_test_scaled)
+    print(name, '->', mean_squared_error(y_test, pred))
