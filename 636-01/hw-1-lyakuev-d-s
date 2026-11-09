@@ -1,0 +1,36 @@
+def solution1(strs):
+output = ""
+if not strs:
+return output
+
+first = strs[0]
+for i, ch in enumerate(first):
+    for s in strs:
+        if i == len(s) or s[i] != ch:
+            return first[:i]
+return first
+print(solution1(["flower", "flow", "flight"]))
+print(solution1(["car", "star", "wars"]))
+
+O(n) - время
+O(1) - память
+
+def solution2(arr, target):
+output = -1
+left, right = 0, len(arr)
+while left < right:
+mid = (left + right) // 2
+if arr[mid] < target:
+left = mid + 1
+else:
+right = mid
+output = left
+return output
+
+print(solution2([1, 2, 3, 6, 9], 9))
+print(solution2([1, 2, 3, 6, 9], 5))
+print(solution2([1, 2, 3, 6, 9], 0))
+print(solution2([1, 2, 3, 6, 9], 110))
+
+O(logN) - время
+O(1) - память
